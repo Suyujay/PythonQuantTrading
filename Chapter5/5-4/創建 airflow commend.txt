@@ -1,0 +1,16 @@
+教學：
+https://airflow.dev.org.tw/docs/apache-airflow/stable/howto/docker-compose/index.html
+
+建置 airflow 步驟：
+1. curl -LfO 'https://airflow.dev.org.tw/docs/apache-airflow/2.9.2/docker-compose.yaml'
+2. docker compose up airflow-init
+
+啟動 airflow 服務：
+docker compose up
+
+
+docker compose down --volumes --rmi all
+
+docker-compose up --build
+
+docker compose up airflow-init

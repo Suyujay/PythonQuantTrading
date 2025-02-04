@@ -1,0 +1,6 @@
+pandas==2.2.3
+shioaji==1.2.4
+backtrader
+finlab
+yfinance
+openpyxl
