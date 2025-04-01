@@ -19,6 +19,8 @@ class MA_Volume_Strategy(bt.Strategy):
         ('ma_short', 5),
         ('ma_medium', 20),
         ('ma_long', 60),
+        ('vol_ma_short', 5),
+        ('vol_ma_long', 60),
         ('stop_loss_pct', 0.02),  
         ('take_profit_pct', 0.02), 
     )
@@ -41,8 +43,8 @@ class MA_Volume_Strategy(bt.Strategy):
         self.ma_long = bt.indicators.SMA(self.dataclose, period=self.params.ma_long)
 
         # 成交量移動平均線
-        self.vol_ma_short = bt.indicators.SMA(self.datavolume, period=self.params.ma_short)
-        self.vol_ma_long = bt.indicators.SMA(self.datavolume, period=self.params.ma_long)
+        self.vol_ma_short = bt.indicators.SMA(self.datavolume, period=self.params.vol_ma_short)
+        self.vol_ma_long = bt.indicators.SMA(self.datavolume, period=self.params.vol_ma_long)
 
         self.order = None
 
@@ -99,7 +101,7 @@ class MA_Volume_Strategy(bt.Strategy):
                 elif (self.dataclose[0] < self.ma_short[0] and
                     self.dataclose[0] < self.ma_medium[0] and
                     self.dataclose[0] < self.ma_long[0] and
-                    self.vol_ma_short[0] < self.vol_ma_long[0]):
+                    self.vol_ma_short[0] > self.vol_ma_long[0]):
                     self.order = self.sell()
                     self.log('創建賣單')
             else:
@@ -129,11 +131,20 @@ class MA_Volume_Strategy(bt.Strategy):
 # 初始化 Cerebro 引擎
 cerebro = bt.Cerebro(optreturn=False)
 
-df = pd.read_csv('TXF_30.csv')
+# df = pd.read_csv('TXF_30.csv')
+df = pd.read_csv('NQ2503_1min_resampled.csv')
+df = df.rename(columns={
+    'ds': 'Date',
+    'open': 'Open',
+    'high': 'High',
+    'low': 'Low',
+    'close': 'Close',
+    'volume': 'Volume',
+})
 df = df.dropna()
 df['Date'] = pd.to_datetime(df['Date'])
 df.index = df['Date']
-df = df.between_time('08:45', '13:45')
+df = df.between_time('09:20', '10:00')
 
 data_feed = bt.feeds.PandasData(
     dataname=df,
@@ -152,20 +163,24 @@ cerebro.adddata(data_feed, name='TXF')
 ma_short_values = [3, 5, 10]
 ma_medium_values = [15, 20, 30]
 ma_long_values = [40, 60, 90]
-stop_loss_values = [0.02, 0.01, 0.03, 0.05]
-take_profit_values = [0.02, 0.01, 0.03, 0.05]
+vol_ma_short_values = [3, 5, 10]
+vol_ma_long_values = [15, 20, 30, 40, 60, 90]
+stop_loss_values = [0.00002, 0.00001, 0.00003, 0.00005]
+take_profit_values = [0.00002, 0.00001, 0.00003, 0.00005]
 
 # 添加策略的排列組合
 cerebro.optstrategy(MA_Volume_Strategy,
                     ma_short=ma_short_values,
                     ma_medium=ma_medium_values,
                     ma_long=ma_long_values,
+                    vol_ma_short=vol_ma_short_values,
+                    vol_ma_long=vol_ma_long_values,
                     stop_loss_pct=stop_loss_values,
                     take_profit_pct=take_profit_values)
 
 # 設定初始資金和交易成本
-cerebro.broker.setcash(300000.0)
-cerebro.broker.setcommission(commission=200, margin=167000, mult=200)
+cerebro.broker.setcash(100000.0)
+cerebro.broker.setcommission(commission=2.2, margin=30000, mult=20)
 
 # 添加 PyFolio 分析器
 cerebro.addanalyzer(bt.analyzers.PyFolio, _name='pyfolio')
@@ -188,6 +203,8 @@ for result in results:
         'ma_short': strat.params.ma_short,
         'ma_medium': strat.params.ma_medium,
         'ma_long': strat.params.ma_long,
+        'vol_ma_short': strat.params.vol_ma_short,
+        'vol_ma_long': strat.params.vol_ma_long,
         'stop_loss_pct': strat.params.stop_loss_pct,
         'take_profit_pct': strat.params.take_profit_pct,
         'cum_return': cum_return,
