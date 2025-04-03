@@ -15,7 +15,7 @@ from strategy.ma_volume_strategy import MA_Volume_Strategy
 # 初始化 Cerebro 引擎
 cerebro = bt.Cerebro()
 # df = pd.read_csv('TXF_30.csv')
-df = pd.read_csv('NQ2503_1min_resampled.csv')
+df = pd.read_csv('NQ2503_1s_resampled.csv')
 df = df.rename(columns={
     'ds': 'Date',
     'open': 'Open',
@@ -31,7 +31,7 @@ df['Date'] = pd.to_datetime(df['Date'])
 # df[date_col] = df[date_col].dt.tz_convert('America/New_York')
 # df[date_col] = df[date_col].dt.tz_localize(None)
 df.index = df['Date']
-df = df.between_time('07:50', '10:10')
+# df = df.between_time('07:50', '10:10')
 data_feed = bt.feeds.PandasData(
     dataname=df,
     name='TXF',

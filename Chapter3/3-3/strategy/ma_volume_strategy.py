@@ -6,16 +6,16 @@ import calendar
 
 class MA_Volume_Strategy(bt.Strategy):
     params = (
-        ('ma_short', 5),
-        ('ma_medium', 30),
-        ('ma_long', 60),
-        ('stddev_short', 5),
+        ('ma_short', 3),
+        ('ma_medium', 15),
+        ('ma_long', 90),
+        ('stddev_short', 3),
         ('stddev_long', 30),
-        ('vol_ma_short', 3),
+        ('vol_ma_short', 10),
         # ('vol_ma_long', 60),
-        ('vol_ma_short_threshold', 1500),
+        ('vol_ma_short_threshold', 1500/60/10),
         ('stop_loss_pct',   0.00001),  
-        ('take_profit_pct', 0.00001),
+        ('take_profit_pct', 0.00005),
         ('trading_start', dt.time(9, 20)),
         ('trading_end', dt.time(10, 0)),
     )
