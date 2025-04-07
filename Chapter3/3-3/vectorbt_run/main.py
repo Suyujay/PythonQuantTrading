@@ -2,7 +2,7 @@ import pandas as pd
 from strategy.ma_volume_strategy import MAVolumeStrategy
 
 # 讀取數據
-df = pd.read_csv(r'../NQ2503_1s_resampled.csv')
+df = pd.read_csv(r'../NQ2503_1min_resampled.csv')
 df['Date'] = pd.to_datetime(df['ds'])
 # df = df.rename(columns={
 #     'open': 'Open',
@@ -12,6 +12,7 @@ df['Date'] = pd.to_datetime(df['ds'])
 #     'volume': 'Volume',
 # })
 df.set_index('Date', inplace=True)
+
 
 # 創建策略實例
 strategy = MAVolumeStrategy()

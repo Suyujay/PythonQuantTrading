@@ -15,7 +15,7 @@ from strategy.ma_volume_strategy import MA_Volume_Strategy
 # 初始化 Cerebro 引擎
 cerebro = bt.Cerebro()
 # df = pd.read_csv('TXF_30.csv')
-df = pd.read_csv('NQ2503_1s_resampled.csv')
+df = pd.read_csv('NQ2503_1min_resampled.csv')
 df = df.rename(columns={
     'ds': 'Date',
     'open': 'Open',

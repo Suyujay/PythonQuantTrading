@@ -11,13 +11,13 @@ class MAVolumeStrategy:
     
     def __init__(
         self,
-        ma_short: int = 3*60,
-        ma_medium: int = 15*60,
-        ma_long: int = 90*60,
+        ma_short: int = 3,
+        ma_medium: int = 15,
+        ma_long: int = 90,
         stddev_short: int = 3,
         stddev_long: int = 30,
-        vol_ma_short: int = 10*60,
-        vol_ma_short_threshold: float = 1500/60,
+        vol_ma_short: int = 10,
+        vol_ma_short_threshold: float = 1500,
         stop_loss_pct: float = 0.00001,
         take_profit_pct: float = 0.00005,
         trading_start: dt.time = dt.time(9, 20),
@@ -116,11 +116,16 @@ class MAVolumeStrategy:
         """
         # 生成信號
         entries_long, exits, entries_short = self.generate_signals(df)
+        print(entries_long)
         
         # 使用 vectorbt 的 Portfolio 進行回測，包括止損和止盈
         portfolio = vbt.Portfolio.from_signals(
             # price=df['close'],
+            open=df['open'],
+            high=df['high'],
+            low=df['low'],
             close=df['close'],
+            # volume=df['volume'],
             entries=entries_long,
             short_entries=entries_short,
             # exits=exits,
@@ -131,7 +136,7 @@ class MAVolumeStrategy:
             sl_stop=self.stop_loss_pct,  # 止損比例
             tp_stop=self.take_profit_pct,  # 止盈比例
             accumulate=False,  # 是否累積頭寸
-            freq='1s'  # 時間頻率
+            freq='1min'  # 時間頻率
         )
         
         return portfolio

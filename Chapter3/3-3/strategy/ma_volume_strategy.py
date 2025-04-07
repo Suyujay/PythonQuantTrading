@@ -13,7 +13,7 @@ class MA_Volume_Strategy(bt.Strategy):
         ('stddev_long', 30),
         ('vol_ma_short', 10),
         # ('vol_ma_long', 60),
-        ('vol_ma_short_threshold', 1500/60/10),
+        ('vol_ma_short_threshold', 1500),
         ('stop_loss_pct',   0.00001),  
         ('take_profit_pct', 0.00005),
         ('trading_start', dt.time(9, 20)),
