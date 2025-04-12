@@ -84,4 +84,11 @@ print(f"總交易數: {total_trades}")
 print(f"贏利交易數: {won_trades}")
 print(f"勝率: {win_rate:.2f}%")
 # %%
-cerebro.plot(style='candlestick')
+# cerebro.plot(style='candlestick')
+
+from plotting import plot_results
+plot_results(cerebro)
+# from backtrader_plotting import Bokeh
+# from backtrader_plotting.schemes import Blackly
+# b = Bokeh(style='bar', plot_mode='single', scheme=Blackly())
+# cerebro.plot(b)
