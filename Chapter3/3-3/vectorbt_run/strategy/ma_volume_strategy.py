@@ -15,13 +15,13 @@ class MAVolumeStrategy:
     def __init__(
         self,
         ma_short: int = 3,#3,
-        ma_medium: int = 20,#15,
-        ma_long: int = 120,#90,
+        ma_medium: int = 15,#15,
+        ma_long: int = 90,#90,
         stddev_short: int = 3,
-        stddev_long: int = 20,
+        stddev_long: int = 30,
         vol_ma_short: int = 10,
-        vol_ma_short_threshold: float = 2000,
-        stop_loss_pct: float = 0.0005,
+        vol_ma_short_threshold: float = 1500,
+        stop_loss_pct: float = 0.0002,
         take_profit_pct: float = 0.0005,
         trading_start: dt.time = dt.time(9, 20),
         trading_end: dt.time = dt.time(10, 0)
@@ -78,6 +78,7 @@ class MAVolumeStrategy:
         ma_short = vbt.MA.run(filtered_df['close'], self.ma_short).ma
         ma_medium = vbt.MA.run(filtered_df['close'], self.ma_medium).ma
         ma_long = vbt.MA.run(filtered_df['close'], self.ma_long).ma
+        ma_short.to_csv('ma_short.csv')
         
         # 標準差指標
         stddev_short = filtered_df['close'].rolling(window=self.stddev_short).std()

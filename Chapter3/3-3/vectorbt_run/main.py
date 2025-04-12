@@ -18,7 +18,7 @@ df.set_index('Date', inplace=True)
 strategy = MAVolumeStrategy()
 
 # 執行回測
-portfolio = strategy.backtest(df, initial_capital=100000.0)
+portfolio = strategy.backtest(df, initial_capital=10000000.0)
 
 # 顯示結果
 print(portfolio.stats())
@@ -28,4 +28,4 @@ print(portfolio.stats())
 # print(f"勝率: {portfolio.trades.win_rate():.2%}")
 
 # 繪製績效圖表
-portfolio.plot().show()
+portfolio.plot(settings=dict(plot_type='candlestick')).show()
