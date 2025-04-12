@@ -72,11 +72,15 @@ class BaseStrategy(bt.Strategy):
             return
         if order.status in [order.Completed]:
             if order.isbuy():
-                self.log(f'BUY EXECUTED, Price: {order.executed.price:.2f}, Cost: {order.executed.value:.2f}, Comm: {order.executed.comm:.2f}')
+                self.log(f'''BUY EXECUTED, Price: {order.executed.price:.2f}, 
+                         Cost: {order.executed.value:.2f}, 
+                         Comm: {order.executed.comm:.2f}''')
                 self.buyprice = order.executed.price # 記錄買入價
                 self.buycomm = order.executed.comm
             elif order.issell(): # 檢查是否為賣單
-                self.log(f'SELL EXECUTED, Price: {order.executed.price:.2f}, Cost: {order.executed.value:.2f}, Comm: {order.executed.comm:.2f}')
+                self.log(f'''SELL EXECUTED, Price: {order.executed.price:.2f}, 
+                         Cost: {order.executed.value:.2f}, 
+                         Comm: {order.executed.comm:.2f}''')
                 self.sellprice = order.executed.price # 記錄賣出價
             self.bar_executed = len(self)
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
