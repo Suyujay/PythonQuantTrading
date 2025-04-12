@@ -10,7 +10,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # 導入策略模組
-from strategy.ma_volume_strategy import MA_Volume_Strategy
+from strategy.momentum_strategy import MomentumStrategy
 
 # 初始化 Cerebro 引擎
 cerebro = bt.Cerebro()
@@ -42,7 +42,7 @@ data_feed = bt.feeds.PandasData(
 cerebro.adddata(data_feed, name='TXF')
 
 # 添加策略
-cerebro.addstrategy(MA_Volume_Strategy)
+cerebro.addstrategy(MomentumStrategy)
 
 # 設定初始資金和交易成本
 cerebro.broker.setcash(100000.0)
