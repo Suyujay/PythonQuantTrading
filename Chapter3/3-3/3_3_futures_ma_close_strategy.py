@@ -26,10 +26,6 @@ df = df.rename(columns={
 })
 df = df.dropna()
 df['Date'] = pd.to_datetime(df['Date'])
-# date_col = 'Date'
-# df[date_col] = pd.to_datetime(df[date_col], utc=True)
-# df[date_col] = df[date_col].dt.tz_convert('America/New_York')
-# df[date_col] = df[date_col].dt.tz_localize(None)
 df.index = df['Date']
 # df = df.between_time('07:50', '10:10')
 data_feed = bt.feeds.PandasData(
