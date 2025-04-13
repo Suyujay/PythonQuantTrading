@@ -34,6 +34,10 @@ class MomentumStrategy(BaseStrategy):
                 self.vol_ma_short[0] > self.params.vol_ma_short_threshold) # 大量
 
     def next(self):
+        # 0. 檢查是否處於觀察期
+        # if self.observe_pause():
+        #     return # 如果在觀察期，則跳過本 K 線
+
         # 1. 檢查是否有掛單
         if self.order:
             return

@@ -1,7 +1,7 @@
 # filepath: d:\Quant\PythonQuantTrading\Chapter3\3-3\strategy\base_strategy.py
 import datetime as dt
 import backtrader as bt
-from datetime import datetime
+from datetime import datetime, timedelta
 import calendar
 
 class BaseStrategy(bt.Strategy):
@@ -13,6 +13,8 @@ class BaseStrategy(bt.Strategy):
         ('ma_short', 3),
         ('ma_medium', 15),
         ('ma_long', 50),
+        ('stddev_period', 20),
+        ('stddev_mosc_threshold', 2.0),
         ('vol_ma_short', 10),
         ('vol_ma_short_threshold', 1500),
         ('atr_short_period', 20),
@@ -28,8 +30,13 @@ class BaseStrategy(bt.Strategy):
         ('rsi_period', 14),
         ('bbands_period', 20),
         ('bbands_devfactor', 2.0),
-        ('prev_high_period', 20),
-        ('prev_low_period', 20),
+        ('prev_high_short', 5),
+        ('prev_high_long', 20),
+        ('prev_low_short', 5),
+        ('prev_low_long', 20),
+        # --- 連續虧損暫停相關參數 ---
+        ('consecutive_loss_threshold', 2), # 連續虧損次數閾值
+        ('pause_duration_minutes', 30),   # 暫停交易分鐘數
     )
 
     def log(self, txt, dt=None):
@@ -49,6 +56,8 @@ class BaseStrategy(bt.Strategy):
         self.ma_medium = bt.indicators.SMA(self.dataclose, period=self.params.ma_medium)
         self.ma_long = bt.indicators.SMA(self.dataclose, period=self.params.ma_long)
         self.vol_ma_short = bt.indicators.SMA(self.datavolume, period=self.params.vol_ma_short)
+        self.stddev = bt.indicators.StandardDeviation(self.dataclose, period=self.params.stddev_period)
+        self.stddev_mosc = bt.indicators.MomentumOscillator(self.stddev, period=self.params.stddev_period)
         self.mosc = bt.indicators.MomentumOscillator(self.dataclose, period=self.params.mosc_period)
         self.atr = bt.indicators.ATR(self.datas[0], period=self.params.atr_short_period)
         self.atr_ratio = self.atr / self.dataclose * 100
@@ -58,14 +67,20 @@ class BaseStrategy(bt.Strategy):
         self.bbands = bt.indicators.BollingerBands(self.dataclose,
                                                    period=self.params.bbands_period,
                                                    devfactor=self.params.bbands_devfactor)
-        self.prev_high = bt.indicators.Highest(self.datahigh, period=self.params.prev_high_period)
-        self.prev_low = bt.indicators.Lowest(self.datalow, period=self.params.prev_low_period)
+        self.prev_high_short = bt.indicators.Highest(self.datahigh, period=self.params.prev_high_short)
+        self.prev_high_long = bt.indicators.Highest(self.datahigh, period=self.params.prev_high_long)
+        self.prev_low_short = bt.indicators.Lowest(self.datalow, period=self.params.prev_low_short)
+        self.prev_low_long = bt.indicators.Lowest(self.datalow, period=self.params.prev_low_long)
 
         # --- 訂單和交易狀態 ---
         self.order = None
         self.buyprice = None
         self.buycomm = None
         self.sellprice = None # 用於記錄空單價格
+
+        # --- 連續虧損和暫停狀態 ---
+        self.consecutive_losses = 0
+        self.pause_until = None # 記錄暫停結束的時間
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -82,7 +97,6 @@ class BaseStrategy(bt.Strategy):
                          Cost: {order.executed.value:.2f}, 
                          Comm: {order.executed.comm:.2f}''')
                 self.sellprice = order.executed.price # 記錄賣出價
-            self.bar_executed = len(self)
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             self.log(f'Order Canceled/Margin/Rejected: {order.getstatusname()}')
         self.order = None # 重置訂單狀態
@@ -90,7 +104,41 @@ class BaseStrategy(bt.Strategy):
     def notify_trade(self, trade):
         if not trade.isclosed:
             return
+        
+        # 更新連續虧損狀態
+        self._update_consecutive_losses(trade)
+
         self.log(f'OPERATION PROFIT, GROSS {trade.pnl:.2f}, NET {trade.pnlcomm:.2f}')
+
+    def _update_consecutive_losses(self, trade):
+        """根據交易結果更新連續虧損計數和觀察期狀態。"""
+        current_dt = self.datas[0].datetime.datetime(0) # 獲取當前時間
+
+        if trade.pnlcomm < 0: # 交易虧損
+            self.consecutive_losses += 1
+            self.log(f'交易虧損, 連續虧損次數: {self.consecutive_losses}')
+            if self.consecutive_losses >= self.params.consecutive_loss_threshold:
+                self.pause_until = current_dt + timedelta(minutes=self.params.pause_duration_minutes)
+                self.log(f'連續虧損達到 {self.params.consecutive_loss_threshold} 次，進入觀察期直到 {self.pause_until.isoformat()}')
+        else: # 交易盈利或持平
+            if self.consecutive_losses > 0:
+                self.log(f'交易盈利或持平，重置連續虧損計數 (之前為 {self.consecutive_losses})')
+                self.consecutive_losses = 0 # 重置連續虧損計數
+
+    def observe_pause(self):
+        """檢查是否處於連續虧損後的觀察期(暫停交易)。"""
+        if self.pause_until is None:
+            return False # 沒有在觀察期
+
+        current_dt = self.datas[0].datetime.datetime(0)
+        if current_dt < self.pause_until:
+            # self.log(f'觀察期內，暫停交易直到 {self.pause_until.isoformat()}') # 可選日誌
+            return True # 仍在觀察期內
+        else:
+            self.log(f'觀察期結束 ({self.pause_until.isoformat()})，恢復交易')
+            self.pause_until = None
+            self.consecutive_losses = 0 # 觀察期結束後重置計數器
+            return False # 觀察期剛結束
 
     @staticmethod
     def option_expiration(date): 
