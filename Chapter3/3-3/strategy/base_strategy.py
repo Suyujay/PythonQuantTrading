@@ -92,6 +92,12 @@ class BaseStrategy(bt.Strategy):
             return
         self.log(f'OPERATION PROFIT, GROSS {trade.pnl:.2f}, NET {trade.pnlcomm:.2f}')
 
+    @staticmethod
+    def option_expiration(date): 
+        # print(f"Option expiration date: {date}")
+        day = 21 - (calendar.weekday(date.year, date.month, 1) + 4) % 7 
+        return datetime(date.year, date.month, day)
+
     def check_trading_time(self):
         """檢查當前是否在交易時段內，並在交易時段結束時平倉"""
         current_time = self.datas[0].datetime.datetime(0).time()
